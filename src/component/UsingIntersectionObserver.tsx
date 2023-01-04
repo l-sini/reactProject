@@ -6,6 +6,8 @@ interface Props {}
 export const UsingIntersectionObserver: React.FC<Props> = () => {
   const scrollBotttomRef = useRef<HTMLDivElement | null>(null);
   const scrollTopRef = useRef<HTMLDivElement | null>(null);
+  const focusTopRef = useRef<any>(null);
+  const focusBottomRef = useRef<any>(null);
   const rowsPerPage = 5;
   const [currentUsers, setCurrentUsers] = useState<any>();
   const [page, setPage] = useState<number>(0);
@@ -19,21 +21,25 @@ export const UsingIntersectionObserver: React.FC<Props> = () => {
           prev === Math.ceil(users.length / rowsPerPage) ? prev : prev + 1
         );
       setLoadingCheck(0);
-    }, 2000);
+      focusBottomRef.current?.focus();
+    }, 500);
   }, []);
   const handleTopObserver = useCallback((entries: any[]) => {
     setLoadingCheck(1);
     setTimeout(() => {
       const target = entries[0];
-      target.isIntersecting && setPage(prev => (prev === 0 ? prev : prev - 1));
-      setLoadingCheck(0);
-    }, 2000);
+      if (target.isIntersecting) {
+        setPage(prev => (prev === 0 ? prev : prev - 1));
+        focusTopRef.current?.focus();
+        setLoadingCheck(0);
+      }
+    }, 500);
   }, []);
   useEffect(() => {
     console.log('top');
     const option = {
       root: null,
-      rootMargin: '20px',
+      rootMargin: '0px',
       threshold: 0,
     };
     const observer = new IntersectionObserver(handleTopObserver, option);
@@ -43,7 +49,7 @@ export const UsingIntersectionObserver: React.FC<Props> = () => {
     console.log('bottom');
     const option = {
       root: null,
-      rootMargin: '20px',
+      rootMargin: '0px',
       threshold: 0,
     };
     const observer = new IntersectionObserver(handleLastObserver, option);
@@ -60,14 +66,14 @@ export const UsingIntersectionObserver: React.FC<Props> = () => {
   }, [page]);
 
   return (
-    <div style={{ width: '100vw' }}>
+    <div>
       <h2>IntersectionObserver를 이용한 스크롤 test</h2>
       {!currentUsers ? (
         <div>
           <p>loading...</p>
         </div>
       ) : (
-        <div style={{ height: '50vh', overflow: 'scroll' }}>
+        <div style={{ height: '20vh', overflow: 'scroll', width: '700px' }}>
           {loadingCheck === 1 && <p>loading...</p>}
           <p ref={scrollTopRef}>유저</p>
           <table>
@@ -95,17 +101,18 @@ export const UsingIntersectionObserver: React.FC<Props> = () => {
                     key={idx.toString()}
                     style={{ padding: '10px 18px', height: '10vh' }}
                   >
-                    <td>{page * 5 + idx + 1}</td>
+                    <td ref={focusTopRef}>{page * 5 + idx + 1}</td>
                     <td>{user.name}</td>
                     <td>{user.phone}</td>
                     <td>{user.country}</td>
                     <td>{user.company}</td>
-                    <td>{user.date}</td>
+                    <td ref={focusBottomRef}>{user.date}</td>
                   </tr>
                 ))}
             </tbody>
           </table>
-          <div ref={scrollBotttomRef}>유저에 관한 정보입니다.</div>
+          <div ref={scrollBotttomRef} />
+          <div>유저에 관한 정보입니다.</div>
           {loadingCheck === 2 && <p>loading...</p>}
         </div>
       )}
